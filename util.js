@@ -36,10 +36,12 @@ let get_option_chain_ltps = async (script, exp, no_of_strikes, CE_PE) => {
         } else if (CE_PE === constants.option_types.PE) {
             atm = atm - (10 * constants.steps[script]);
         }
+        let strikes = [];
         let list = [];
         let promises = [];
         for (let i = 0; i < no_of_strikes; i++) {
             let strike = atm;
+            strikes.push(strike);
             let token_obj = await get_token_obj(script, exp, strike, CE_PE);
             promises.push(orders.get_ltp(token_obj));
             list.push({ strike, token_obj });
@@ -52,7 +54,7 @@ let get_option_chain_ltps = async (script, exp, no_of_strikes, CE_PE) => {
                 }
             }
             console.log(values);
-            return values;
+            return [strikes,values];
         }).catch(async (exception) => console.log("exception: ", exception))
         return values;
     }
@@ -62,18 +64,19 @@ let get_option_chain_ltps = async (script, exp, no_of_strikes, CE_PE) => {
 }
 
 let get_near_number = (value, list) => {
+    let values = list[1];
     let diff = []
     let min = 100;
     let min_index = -1;
-    for (let i = 0; i < list.length; i++) {
-        let d = Math.abs(list[i] - value);
+    for (let i = 0; i < values.length; i++) {
+        let d = Math.abs(values[i] - value);
         if (d < min) {
             min = d;
             min_index = i;
         }
         diff.push(d);
     }
-    return list[min_index];
+    return list[0][min_index];
 }
 
 let get_strike_near_to_price = async (script, exp, price, CE_PE) => {
@@ -95,5 +98,8 @@ let get_strike_near_to_price = async (script, exp, price, CE_PE) => {
     }
     return CE_PE_ltps;
 }
+
+get_strike_near_to_price(constants.scripts.NIFTY,"31AUG23",35)
+.then(value=>console.log(value));
 
 module.exports = { get_token_obj, get_strike_near_to_price }
